@@ -1,0 +1,59 @@
+
+library(rvest)
+library(tidyverse)
+library(ggplot2)
+
+revenue_graph <- function(ticker){
+
+#Revenue graph
+stock_data <- paste0("https://www.macrotrends.net/stocks/charts/", ticker, "//revenue") %>%
+   read_html() %>%
+   html_nodes("table") %>%
+   .[[1]] %>%
+   html_table() %>%
+   as.data.frame()
+
+colnames(stock_data)[1] <- "year"
+colnames(stock_data)[2] <- "revenue"
+
+stock_data$revenue <- gsub(",", "", stock_data$revenue)
+stock_data$revenue <- sub('.', '', stock_data$revenue) %>%
+   as.numeric()
+
+ggplot(stock_data, aes(x=year, y=revenue, fill = revenue > 0)) + 
+   geom_bar(stat = "identity") +
+   scale_fill_discrete(name = paste0("Annual ", ticker, " $ Revenue Change"), labels = c("Positive", "Negative"))
+
+}
+
+revenue_graph("")
+
+price_history_graph <- function(ticker){
+   
+   #Revenue graph
+   stock_data <- paste0("https://www.macrotrends.net/stocks/charts/", ticker, "//stock-price-history") %>%
+      read_html() %>%
+      html_nodes("table") %>%
+      .[[1]] %>%
+      html_table() %>%
+      as.data.frame()
+   
+   colnames(stock_data) <- stock_data[1,]
+   stock_data <- stock_data[-1, ] 
+   
+   stock_data$Year <- as.numeric(stock_data$Year)
+   stock_data$`Average Stock Price` <- as.numeric(stock_data$`Average Stock Price`)
+   stock_data$`Year Open` <- as.numeric(stock_data$`Year Open`)
+   stock_data$`Year High` <- as.numeric(stock_data$`Year High`)
+   stock_data$`Year Low` <- as.numeric(stock_data$`Year Low`)
+   stock_data$`Year Close` <- as.numeric(stock_data$`Year Close`)
+   stock_data$`Annual % Change` <- gsub("%", "", stock_data$`Annual % Change`)
+   stock_data$`Annual % Change` <- as.numeric(stock_data$`Annual % Change`)
+   
+   ggplot(stock_data, aes(x=Year, y=`Annual % Change`, fill = `Annual % Change` > 0)) + 
+      geom_bar(stat = "identity") +
+      scale_fill_discrete(name = paste0("Annual ", ticker, " % Change"), labels = c("Negative", "Positive"))
+
+}
+
+price_history_graph("")
